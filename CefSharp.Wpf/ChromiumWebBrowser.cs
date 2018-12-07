@@ -1725,7 +1725,7 @@ namespace CefSharp.Wpf
         /// </summary>
         /// <param name="action">The action.</param>
         /// <param name="priority">The priority.</param>
-        private void UiThreadRunSync(Action action, DispatcherPriority priority = DispatcherPriority.DataBind)
+        protected void UiThreadRunSync(Action action, DispatcherPriority priority = DispatcherPriority.DataBind)
         {
             if (Dispatcher.CheckAccess())
             {

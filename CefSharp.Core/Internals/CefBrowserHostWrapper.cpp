@@ -333,7 +333,7 @@ void CefBrowserHostWrapper::ImeSetComposition(String^ text, cli::array<Compositi
     }
 
     //Replacement Range is Mac OSX only
-    _browserHost->ImeSetComposition(StringUtils::ToNative(text), underlinesVector, CefRange(), range);
+    _browserHost->ImeSetComposition(StringUtils::ToNative(text), underlinesVector, CefRange(UINT32_MAX, UINT32_MAX), range);
 }
 
 void CefBrowserHostWrapper::ImeCommitText(String^ text)
@@ -341,7 +341,7 @@ void CefBrowserHostWrapper::ImeCommitText(String^ text)
     ThrowIfDisposed();
 
     //Range and cursor position are Mac OSX only
-    _browserHost->ImeCommitText(StringUtils::ToNative(text), CefRange(), NULL);
+    _browserHost->ImeCommitText(StringUtils::ToNative(text), CefRange(UINT32_MAX, UINT32_MAX), NULL);
 }
 
 void CefBrowserHostWrapper::ImeFinishComposingText(bool keepSelection)
