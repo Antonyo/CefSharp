@@ -5,6 +5,7 @@
 #include "Stdafx.h"
 
 #include "ManagedCefBrowserAdapter.h"
+#include "WindowInfo.h"
 #include "Internals/Messaging/Messages.h"
 #include "Internals/CefFrameWrapper.h"
 #include "Internals/CefSharpBrowserWrapper.h"
@@ -16,19 +17,36 @@ bool ManagedCefBrowserAdapter::IsDisposed::get()
     return _isDisposed;
 }
 
-void ManagedCefBrowserAdapter::CreateOffscreenBrowser(IntPtr windowHandle, BrowserSettings^ browserSettings, RequestContext^ requestContext, String^ address)
+void ManagedCefBrowserAdapter::CreateBrowser(IWindowInfo^ windowInfo, BrowserSettings^ browserSettings, RequestContext^ requestContext, String^ address)
 {
-    auto hwnd = static_cast<HWND>(windowHandle.ToPointer());
+    auto cefWindowInfoWrapper = static_cast<WindowInfo^>(windowInfo);
 
-    CefWindowInfo window;
-    window.SetAsWindowless(hwnd);
     CefString addressNative = StringUtils::ToNative(address);
 
-    if (!CefBrowserHost::CreateBrowser(window, _clientAdapter.get(), addressNative,
+    if (browserSettings == nullptr)
+    {
+        throw gcnew ArgumentNullException("browserSettings", "cannot be null");
+    }
+
+    if (browserSettings->IsDisposed)
+    {
+        throw gcnew ObjectDisposedException("browserSettings", "browser settings has already been disposed. " +
+            "BrowserSettings created by CefSharp are automatically disposed, to control the lifecycle create and set your own instance.");
+    }
+
+    if (!CefBrowserHost::CreateBrowser(*cefWindowInfoWrapper->GetWindowInfo(), _clientAdapter.get(), addressNative,
         *browserSettings->_browserSettings, static_cast<CefRefPtr<CefRequestContext>>(requestContext)))
     {
-        throw gcnew InvalidOperationException("Failed to create offscreen browser. Call Cef.Initialize() first.");
+        throw gcnew InvalidOperationException("CefBrowserHost::CreateBrowser call failed, review the CEF log file for more details.");
     }
+
+    //Dispose of BrowserSettings if we created it, if user created then they're responsible
+    if (browserSettings->FrameworkCreated)
+    {
+        delete browserSettings;
+    }
+
+    delete windowInfo;
 }
 
 void ManagedCefBrowserAdapter::OnAfterBrowserCreated(IBrowser^ browser)
@@ -64,19 +82,6 @@ void ManagedCefBrowserAdapter::OnAfterBrowserCreated(IBrowser^ browser)
             _webBrowserInternal->OnAfterBrowserCreated(browser);
         }
     }
-}
-
-void ManagedCefBrowserAdapter::CreateBrowser(BrowserSettings^ browserSettings, RequestContext^ requestContext, IntPtr sourceHandle, String^ address)
-{
-    HWND hwnd = static_cast<HWND>(sourceHandle.ToPointer());
-    RECT rect;
-    GetClientRect(hwnd, &rect);
-    CefWindowInfo window;
-    window.SetAsChild(hwnd, rect);
-    CefString addressNative = StringUtils::ToNative(address);
-
-    CefBrowserHost::CreateBrowser(window, _clientAdapter.get(), addressNative,
-        *browserSettings->_browserSettings, static_cast<CefRefPtr<CefRequestContext>>(requestContext));
 }
 
 void ManagedCefBrowserAdapter::Resize(int width, int height)

@@ -128,7 +128,7 @@ namespace CefSharp.Wpf.Example.Handlers
             {
                 if (handler.GetResult((uint)lParam, out text))
                 {
-                    owner.GetBrowserHost().ImeCommitText(text);
+                    owner.GetBrowserHost().ImeCommitText(text, new Range(int.MaxValue, int.MaxValue), 0);
                     return;
                 }
             }
@@ -140,7 +140,7 @@ namespace CefSharp.Wpf.Example.Handlers
 
                 if (handler.GetComposition((uint)lParam, underlines, ref compositionStart, out text))
                 {
-                    owner.GetBrowserHost().ImeSetComposition(text, underlines.ToArray(), new Range(compositionStart, compositionStart));
+                    owner.GetBrowserHost().ImeSetComposition(text, underlines.ToArray(), new Range(int.MaxValue, int.MaxValue), new Range(compositionStart, compositionStart));
 
                     UpdateCaretPosition(compositionStart - 1);
                 }

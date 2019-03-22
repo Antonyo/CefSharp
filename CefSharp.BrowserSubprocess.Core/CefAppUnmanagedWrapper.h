@@ -12,6 +12,7 @@
 #include "RegisterBoundObjectRegistry.h"
 
 using namespace System::Collections::Generic;
+using namespace CefSharp::RenderProcess;
 
 namespace CefSharp
 {
@@ -19,10 +20,11 @@ namespace CefSharp
     private class CefAppUnmanagedWrapper : CefApp, CefRenderProcessHandler
     {
     private:
+        gcroot<IRenderProcessHandler^> _handler;
         gcroot<Action<CefBrowserWrapper^>^> _onBrowserCreated;
         gcroot<Action<CefBrowserWrapper^>^> _onBrowserDestroyed;
         gcroot<ConcurrentDictionary<int, CefBrowserWrapper^>^> _browserWrappers;
-        gcroot<List<CefExtension^>^> _extensions;
+        gcroot<List<V8Extension^>^> _extensions;
         gcroot<List<CefCustomScheme^>^> _schemes;
         bool _focusedNodeChangedEnabled;
         bool _legacyBindingEnabled;
@@ -35,12 +37,13 @@ namespace CefSharp
     public:
         static const CefString kPromiseCreatorScript;
 
-        CefAppUnmanagedWrapper(List<CefCustomScheme^>^ schemes, bool enableFocusedNodeChanged, Action<CefBrowserWrapper^>^ onBrowserCreated, Action<CefBrowserWrapper^>^ onBrowserDestoryed)
+        CefAppUnmanagedWrapper(IRenderProcessHandler^ handler, List<CefCustomScheme^>^ schemes, bool enableFocusedNodeChanged, Action<CefBrowserWrapper^>^ onBrowserCreated, Action<CefBrowserWrapper^>^ onBrowserDestoryed)
         {
+            _handler = handler;
             _onBrowserCreated = onBrowserCreated;
             _onBrowserDestroyed = onBrowserDestoryed;
             _browserWrappers = gcnew ConcurrentDictionary<int, CefBrowserWrapper^>();
-            _extensions = gcnew List<CefExtension^>();
+            _extensions = gcnew List<V8Extension^>();
             _schemes = schemes;
             _focusedNodeChangedEnabled = enableFocusedNodeChanged;
             _javascriptObjects = gcnew Dictionary<String^, JavascriptObject^>();

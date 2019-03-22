@@ -376,6 +376,28 @@ namespace CefSharp
         }
 
         /// <summary>
+        /// Loads html as Data Uri
+        /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs for details
+        /// If base64Encode is false then html will be Uri encoded
+        /// </summary>
+        /// <param name="frame">The <seealso cref="IFrame"/> instance this method extends</param>
+        /// <param name="html">Html to load as data uri.</param>
+        /// <param name="base64Encode">if true the html string will be base64 encoded using UTF8 encoding.</param>
+        public static void LoadHtml(this IFrame frame, string html, bool base64Encode = false)
+        {
+            if (base64Encode)
+            {
+                var base64EncodedHtml = Convert.ToBase64String(Encoding.UTF8.GetBytes(html));
+                frame.LoadUrl("data:text/html;base64," + base64EncodedHtml);
+            }
+            else
+            {
+                var uriEncodedHtml = Uri.EscapeDataString(html);
+                frame.LoadUrl("data:text/html," + uriEncodedHtml);
+            }
+        }
+
+        /// <summary>
         /// Registers and loads a <see cref="ResourceHandler"/> that represents the HTML content.
         /// </summary>
         /// <remarks>
@@ -1043,10 +1065,10 @@ namespace CefSharp
 
         private static void ThrowExceptionIfCanExecuteJavascriptInMainFrameFalse()
         {
-            throw new Exception("Unable to execute javascript at this time, scripts can only be executed within a V8Context." +
-                                    "Use the IWebBrowser.CanExecuteJavascriptInMainFrame property to guard against this exception." +
+            throw new Exception("Unable to execute javascript at this time, scripts can only be executed within a V8Context. " +
+                                    "Use the IWebBrowser.CanExecuteJavascriptInMainFrame property to guard against this exception. " +
                                     "See https://github.com/cefsharp/CefSharp/wiki/General-Usage#when-can-i-start-executing-javascript " +
-                                    "for more details on when you can execute javascript. For frames that do not contain Javascript then no" +
+                                    "for more details on when you can execute javascript. For frames that do not contain Javascript then no " +
                                     "V8Context will be created. Executing a script once the frame has loaded it's possible to create a V8Context. " +
                                     "You can use browser.GetMainFrame().ExecuteJavaScriptAsync(script) or browser.GetMainFrame().EvaluateScriptAsync " +
                                     "to bypass these checks (advanced users only).");
